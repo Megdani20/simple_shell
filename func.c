@@ -1,65 +1,114 @@
-#include "main.h"
-/**
- * built_in - examines if the command
- * is a built-in.
- * @command: the command to check
- * @free_line: line to free if its an exit command
- * @proces_stat: the status of the last process
- * Return: 1 on success, 0 on failure
-*/
-int built_in(char *command, char *free_line, int proces_stat)
-{
-	int is_built_in;
+#include "shell.h"
 
-	is_built_in = retrieveBuiltIn(command);
-	if (is_built_in == 0)
+/**
+ * _strlen - returns the length of a string
+ * @str: string to be measured
+ * Return: length of string
+ */
+
+int _strlen(char *str)
+{
+	int i = 0;
+
+	while (str[i] != '\0')
+		i++;
+	return (i);
+}
+
+/**
+ * _strcmp - compares two strings
+ * @str1: first string
+ * @str2: second string
+ * Return: 0 if strings are equal, -1 if not
+ */
+
+int _strcmp(char *str1, char *str2)
+{
+	int i = 0;
+
+	while (str1[i] != '\0' && str2[i] != '\0')
 	{
-		free(free_line);
-		exit(WEXITSTATUS(proces_stat));
-	}
-	else if (is_built_in == 1)
-	{
-		printEnv();
-		return (1);
+		if (str1[i] != str2[i])
+			return (-1);
+		i++;
 	}
 	return (0);
 }
 
 /**
- * printEnv - prints all the environment variables
-*/
-void printEnv(void)
-{
-	int i;
+ * _strncmp - compares two strings
+ * @str1: first string
+ * @str2: second string
+ * @n: number of bytes to compare
+ * Return: 0 if strings are equal, -1 if not
+ */
 
-	for (i = 0; environ[i]; i++)
-	{
-		write(STDOUT_FILENO, environ[i], str_len(environ[i]));
-		write(STDOUT_FILENO, "\n", 1);
-	}
-}
-
-/**
- * locateComment - examines the provided
- * line for a comment
- * @command_line: the input command line
- * Return: the processed command line
-*/
-char *locateComment(char *command_line)
+int _strncmp(char *str1, char *str2, int n)
 {
 	int i = 0;
 
-	if (str_len(command_line) >= 2)
+	while (str1[i] != '\0' && str2[i] != '\0' && i < n)
 	{
-		while (command_line[i])
-		{
-			if (command_line[i] == '#' && command_line[i - 1] == ' ')
-			{
-				command_line[i - 1] = '\0';
-				break;
-			}
-			i++;
-		}
+		if (str1[i] != str2[i])
+			return (-1);
+		i++;
 	}
-	return (command_line);
+	if (i == n)
+		return (0);
+	return (-1);
+}
+
+/**
+ * _strdup - duplicates a string
+ * @str: string to be duplicated
+ * Return: pointer to the duplicated string
+ */
+
+char *_strdup(char *str)
+{
+	int i = 0;
+	char *dup = NULL;
+
+	if (str == NULL)
+		return (NULL);
+	dup = malloc(sizeof(char) * (_strlen(str) + 1));
+	if (dup == NULL)
+		return (NULL);
+	while (str[i] != '\0')
+	{
+		dup[i] = str[i];
+		i++;
+	}
+	dup[i] = '\0';
+	return (dup);
+}
+
+/**
+ * _strcatpath - concatenates two strings
+ * @dest: destination string
+ * @src: source string
+ * Return: pointer to the concatenated string
+ */
+
+char *_strcatpath(char *dest, char *src)
+{
+	int i = 0, j = 0;
+	char *concatt = NULL;
+
+	concatt = malloc(sizeof(char) * (_strlen(dest) + _strlen(src) + 1));
+	if (concatt == NULL)
+		return (NULL);
+	while (dest[i] != '\0')
+	{
+		concatt[i] = dest[i];
+		i++;
+	}
+	while (src[j] != '\0')
+	{
+		concatt[i] = src[j];
+		i++;
+		j++;
+	}
+	concatt[i] = '\0';
+	return (concatt);
 }

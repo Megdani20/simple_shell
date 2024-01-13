@@ -1,100 +1,68 @@
-#include "main.h"
-/**
- * main - entry point
- * @argc: number of args
- * @argv: args
- * Return: 0
-*/
-int main(int argc __attribute__((unused)), char *argv[])
-{
-	size_t len;
-	char *line = NULL, *command;
-	int nr, loop = 0, status = 0;
+#include "shell.h"
 
-	while (1)
+/**
+ * main - main function of the shell
+ * @ac: argument count
+ * @av: argument vector
+ * @env: environment variables
+ * Return: 0 on success
+ */
+
+int main(int ac, char **av, char **env)
+{
+	char *buf = NULL;
+	size_t buf_size = 0;
+	int n_characters = 0;
+	int shell = 1;
+	(void)ac;
+
+	signal(SIGINT, sigint_handler);
+	while (shell)
 	{
-		if (isatty(STDIN_FILENO) == 1)
-			write(STDOUT_FILENO, "#soukaina/chaimaa$ ", 11);
-		nr = getline(&line, &len, stdin);
-		if (nr >= 0)
+		if (isatty(STDIN_FILENO))
 		{
-			line[nr - 1] = '\0';
-			command = removeWhitespace(line);
-			if (!built_in(command, line, status))
-				status = execfile(command, argv[0]);
-			free(line);
-			line = NULL;
+			fflush(stdin);
+			write(STDOUT_FILENO, "$ ", 2);
 		}
-		else
+		n_characters = _getline(&buf, &buf_size, STDIN_FILENO);
+		cut_string(buf);
+		if (n_characters == EOF)
 		{
-			free(line);
+			if (isatty(STDIN_FILENO))
+				write(STDOUT_FILENO, "\n", 1);
 			break;
 		}
-		loop++;
+		if (n_characters > 1)
+			buf[n_characters - 1] = '\0';
+		if (buf[0] == '\n')
+			continue;
+		input(buf, env, av);
+		buf_size = 0;
+		buf = NULL;
 	}
+	free(buf);
 	return (0);
 }
 
 /**
- * removeWhitespace - ignores surrounded spaces
- * in the command line
- * @previous_line: command line
- * Return: command line after
- * spaces are removed
-*/
-char *removeWhitespace(char *previous_line)
-{
-	char *end_line, *new_line = previous_line;
-
-	while (*new_line == ' ')
-		new_line++;
-	end_line = new_line + (str_len(new_line) - 1);
-	while (end_line > new_line && *end_line == ' ')
-		end_line--;
-	*(end_line + 1) = '\0';
-	return (new_line);
-}
-/**
- * createBuffer - allocates memory
- * for args
- * @num_args: number of args
- * @command: command line
- * Return: args
+ * cut_string - cuts a string when #
+ * @str: string to cut
+ * Return: string cut
  */
-char **createBuffer(int num_args, char *command)
-{
-	char **args, *delimeter = " ", *args_use;
-	int i = 0;
 
-	args = malloc((num_args + 1) * sizeof(char *));
-	if (!args)
-		return (NULL);
-	args_use = strtok(command, delimeter);
-	while (args_use != NULL)
-	{
-	args[i] = str_dup(args_use);
-	args_use = strtok(NULL, delimeter);
-	i++;
-	}
-	args[i] = NULL;
-	return (args);
-}
-/**
- * _free - free all memory
- * @args: arguments
- */
-void _free(char **args)
+char *cut_string(char *str)
 {
 	int i = 0;
 
-	if (args != NULL)
+	while (str[i] != '\0')
 	{
-		while (args[i] != NULL)
+		if (str[i] == '#')
 		{
-			free(args[i]);
-			i++;
+			str[i] = '\0';
+			break;
 		}
-		free(args[i]);
-		free(args);
+		i++;
 	}
+	return (str);
 }
+
